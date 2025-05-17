@@ -1,75 +1,144 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import styled from 'styled-components/native';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { PokemonDetailsCard } from '../../src/presentation/components/PokemonDetailsCard';
+import { PokemonListItemCard } from '../../src/presentation/components/PokemonListItemCard';
+import { bulbasaurTheme } from '../../src/shared/constants/theme';
 
-export default function HomeScreen() {
+import {
+  getPokemonByNameUseCase,
+  getPokemonsUseCase
+} from '../../src/application/useCases';
+import { Pokemon } from '../../src/domain/models/Pokemon';
+
+export default function PokedexScreen() {
+  const [search, setSearch] = useState('');
+  const [filteredList, setFilteredList] = useState<Pokemon[]>([]);
+  const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+  const [pokemonDetails, setPokemonDetails] = useState<Pokemon | null>(null);
+
+  const { data: pokemonList, isLoading } = useQuery({
+    queryKey: ['pokemons'],
+    queryFn: () => getPokemonsUseCase.execute(151, 0),
+  });
+
+  useEffect(() => {
+    if (selectedPokemon) {
+      getPokemonByNameUseCase.execute(selectedPokemon.name).then(setPokemonDetails);
+    }
+  }, [selectedPokemon]);
+
+  useEffect(() => {
+    if (!pokemonList || pokemonList.length === 0) return;
+
+    const applyFilters = async () => {
+      const allData = await Promise.all(
+        pokemonList.map((p) => getPokemonByNameUseCase.execute(p.name))
+      );
+
+      const lowerSearch = search.toLowerCase();
+
+      const filtered = allData.filter((pokemon) => {
+        const nameMatch = pokemon.name.toLowerCase().includes(lowerSearch);
+        const idMatch = pokemon.id.toString() === lowerSearch;
+        const typeMatch = pokemon.types.some((t) =>
+          t.type.name.toLowerCase().includes(lowerSearch)
+        );
+
+        return lowerSearch === '' || nameMatch || idMatch || typeMatch;
+      });
+
+      setFilteredList(filtered);
+    };
+
+    applyFilters();
+  }, [search, pokemonList]);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <Container>
+      <SearchBarContainer>
+        <StyledInput
+          placeholder="Buscar por nome, número ou tipo"
+          value={search}
+          onChangeText={setSearch}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </SearchBarContainer>
+
+      <Content>
+        <LeftPanel>
+          {isLoading ? (
+            <ActivityIndicator size="large" />
+          ) : (
+            <FlatList
+              data={filteredList.length > 0 ? filteredList : pokemonList}
+              keyExtractor={(item) => item.name}
+              renderItem={({ item }) => (
+                <PokemonListItemCard
+                  id={item.id.toString()}
+                  name={item.name}
+                  isSelected={item.name === selectedPokemon?.name}
+                  onPress={() => setSelectedPokemon(item)}
+                />
+              )}
+            />
+          )}
+        </LeftPanel>
+
+        <RightPanel>
+          {pokemonDetails ? (
+            <PokemonDetailsCard pokemon={pokemonDetails} />
+          ) : (
+            <PlaceholderText>Selecione um Pokémon</PlaceholderText>
+          )}
+        </RightPanel>
+      </Content>
+    </Container>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+
+
+const Container = styled(SafeAreaView)`
+  flex: 1;
+  background-color: ${bulbasaurTheme.colors.background};
+`;
+
+const SearchBarContainer = styled.View`
+  padding: 8px 12px;
+  background-color: ${bulbasaurTheme.colors.background};
+`;
+
+const StyledInput = styled.TextInput`
+  height: 40px;
+  border: 1px solid ${bulbasaurTheme.colors.border};
+  border-radius: 8px;
+  padding: 0 12px;
+  background-color: ${bulbasaurTheme.colors.inputBackground};
+  color: ${bulbasaurTheme.colors.text};
+`;
+
+
+const Content = styled.View`
+  flex: 1;
+  flex-direction: row;
+`;
+const LeftPanel = styled.View`
+  width: 40%;
+  padding: 8px;
+`;
+
+const RightPanel = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  background-color: ${bulbasaurTheme.colors.cardBackground};
+`;
+
+const PlaceholderText = styled.Text`
+  font-size: 16px;
+  color: ${bulbasaurTheme.colors.placeholder};
+`;
+

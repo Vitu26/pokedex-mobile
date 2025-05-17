@@ -1,50 +1,134 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+#  Pokedex Vitu App
 
-## Get started
+Uma Pokédex moderna construída com **React Native** e **Expo**, utilizando **Clean Architecture** para uma arquitetura robusta e escalável.
 
-1. Install dependencies
+![pokedex-banner](./assets/banner.png) <!-- Altere ou remova se necessário -->
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+##  Funcionalidades
 
-   ```bash
-   npx expo start
-   ```
+- Listagem dos 151 primeiros Pokémon
+- Busca por nome, número ou tipo
+- Visualização de detalhes de cada Pokémon
+- Favoritar/Desfavoritar Pokémon com persistência local (AsyncStorage)
+- Layout responsivo com Styled Components
+- Organização baseada em Clean Architecture
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+##  Estrutura de Pastas (Clean Architecture)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+src/
+├── domain/            # Lógica de negócio e contratos
+│   ├── models/        # Entidades do domínio (ex: Pokemon.ts)
+│   ├── repository/    # Interfaces para repositórios
+│   └── usecases/      # Casos de uso (GetPokemonByName, GetFavorites, etc.)
+│
+├── infra/             # Implementações técnicas
+│   ├── services/      # Comunicação com a API (pokeapi)
+│   └── storage/       # Persistência local (AsyncStorage)
+│
+├── presentation/      # UI
+│   ├── screens/       # Telas (FavoritesScreen, PokedexScreen, etc.)
+│   ├── components/    # Componentes reutilizáveis
+│   └── context/       # Contextos (FavoritesProvider)
+│
+├── providers/         # Providers globais (React Query, temas)
+└── shared/            # Constantes, temas, utilitários
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+##  Tecnologias utilizadas
 
-To learn more about developing your project with Expo, look at the following resources:
+- [React Native](https://reactnative.dev/)
+- [Expo](https://expo.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [React Query](https://tanstack.com/query/v4)
+- [Styled Components](https://styled-components.com/)
+- [AsyncStorage](https://react-native-async-storage.github.io/async-storage/)
+- [PokeAPI](https://pokeapi.co/)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+##  Notificações com Expo e EAS
 
-Join our community of developers creating universal apps.
+O projeto utiliza o Expo para gerenciamento de notificações. As rotas do EAS Notifications são configuradas automaticamente no painel do Expo.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Documentação oficial: https://docs.expo.dev/push-notifications/overview/
+- Importação recomendada:
+```ts
+import * as Notifications from 'expo-notifications';
+```
+- Cadastro do token para envio de notificações:
+```ts
+const token = await Notifications.getExpoPushTokenAsync();
+```
+
+> Lembre-se de configurar as permissões de notificação nas plataformas Android e iOS.
+
+---
+
+##  Casos de Uso
+
+### Exemplo: GetPokemonByNameUseCase
+```ts
+export class GetPokemonByNameUseCase {
+  constructor(private repository: IPokemonRepository) {}
+
+  async execute(name: string): Promise<Pokemon> {
+    return this.repository.getPokemonByName(name);
+  }
+}
+```
+
+Utilização:
+```ts
+const useCase = new GetPokemonByNameUseCase(repository);
+const data = await useCase.execute("pikachu");
+```
+
+---
+
+##  Instalação
+
+```bash
+git clone https://github.com/seu-usuario/pokedex-vitu-app.git
+cd pokedex-vitu-app
+npm install # ou yarn
+npx expo start
+```
+
+---
+
+##  Prévia
+
+![preview-1](./assets/screen1.png)
+![preview-2](./assets/screen2.png)
+
+---
+
+##  Melhorias Futuras
+
+- [ ] Evoluções em cadeia
+- [ ] Filtro por tipo
+- [ ] Cache offline com React Query
+- [ ] Testes unitários nos casos de uso
+- [ ] Suporte a múltiplos idiomas
+
+---
+
+## Autor
+
+**Victor Loic**  
+GitHub: [@Vitu26](https://github.com/Vitu26)  
+LinkedIn: [linkedin.com/in/victorloic](https://linkedin.com/in/victorloic)
+
+---
+
+##  Licença
+
+Projeto licenciado sob a Licença MIT. Consulte [LICENSE](./LICENSE) para mais informações.
