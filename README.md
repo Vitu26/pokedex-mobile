@@ -111,21 +111,12 @@ npx expo start
 
 ---
 
-##  Melhorias Futuras
-
-- [ ] Evoluções em cadeia
-- [ ] Filtro por tipo
-- [ ] Cache offline com React Query
-- [ ] Testes unitários nos casos de uso
-- [ ] Suporte a múltiplos idiomas
-
----
 
 ## Autor
 
 **Victor Loic**  
 GitHub: [@Vitu26](https://github.com/Vitu26)  
-LinkedIn: [linkedin.com/in/victorloic](https://linkedin.com/in/victorloic)
+LinkedIn: [linkedin.com/in/victorloic](https://linkedin.com/in/victor-loic-lemos)
 
 ---
 
